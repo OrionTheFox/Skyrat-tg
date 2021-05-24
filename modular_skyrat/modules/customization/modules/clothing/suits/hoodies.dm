@@ -67,3 +67,12 @@
 	name = "New Reykjavik Technical Institute hoodie"
 	desc = "A warm, gray sweatshirt. It bears the letters NRT on the back, in reference to Sif's premiere technical institute."
 	icon_state = "nrti_hoodie"
+
+/obj/item/clothing/suit/hoodie/WIP	//This is in the hoodie file because it's technically a hoodie, just a pullover - no zipper. It also matches the hoodie stats
+	name = "WIP NAME"
+	desc = "WIP DESCRIPTION"
+	icon = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
+	worn_icon = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
+	worn_icon_digi = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
+	icon_state = "nrti_hoodie"	//ALL CREDIT TO DREAD FOR THIS LOVELY SPRITE!!!
+	min_cold_protection_temperature = T0C - 20
