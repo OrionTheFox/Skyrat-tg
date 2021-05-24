@@ -68,11 +68,19 @@
 	desc = "A warm, gray sweatshirt. It bears the letters NRT on the back, in reference to Sif's premiere technical institute."
 	icon_state = "nrti_hoodie"
 
-/obj/item/clothing/suit/hoodie/WIP	//This is in the hoodie file because it's technically a hoodie, just a pullover - no zipper. It also matches the hoodie stats
-	name = "WIP NAME"
-	desc = "WIP DESCRIPTION"
+/obj/item/clothing/suit/hoodie //This is in the hoodie file because it's technically a hoodie, just a pullover - no zipper. It also matches the hoodie stats
+	/*
+	NOT YET IMPLIMENTED!!!!! JUST HERE AS THE FRAMEWORK FOR NON-TOGGLE HOODIES!!!!!
+	*/
+	name = "baggy hoodie"
+	desc = "NYI"
 	icon = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
 	worn_icon = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
 	worn_icon_digi = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
-	icon_state = "nrti_hoodie"	//ALL CREDIT TO DREAD FOR THIS LOVELY SPRITE!!!
+	icon_state = "bhoodie"	//ALL CREDIT TO DREAD FOR THIS LOVELY SPRITE!!!
 	min_cold_protection_temperature = T0C - 20
+
+/obj/item/clothing/suit/hoodie/tri-color
+	name = "baggy tri-color hoodie"
+	desc = "The latest in fashion from the hit 'Titlist' brand."
+	icon_state = "bhoodie_tritone"	//ALL CREDIT TO DREAD FOR THIS LOVELY SPRITE!!!

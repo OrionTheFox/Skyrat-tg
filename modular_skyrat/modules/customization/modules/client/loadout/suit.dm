@@ -307,6 +307,10 @@
 	name = "NRTI Hoodie"
 	path = /obj/item/clothing/suit/storage/toggle/hoodie/nrti
 
+/datum/loadout_item/suit/hoodie/nrti
+	name = "Baggy Tri-Tone Hoodie"
+	path = /obj/item/clothing/suit/hoodie/tri-color
+
 //JOB RELATED
 /datum/loadout_item/suit/job
 	subcategory = LOADOUT_SUBCATEGORY_JOB
