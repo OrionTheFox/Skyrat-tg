@@ -82,7 +82,7 @@
 	icon_state = "bhoodie"
 	min_cold_protection_temperature = T0C - 20	//Just gonna steal the same stats as the above hoodies
 
-/obj/item/clothing/suit/hoodie/tricolor
-	name = "baggy tri-color hoodie"
+/obj/item/clothing/suit/hoodie/tritone
+	name = "baggy tri-tone hoodie"
 	desc = "The latest in fashion from Dreadthreads"
 	icon_state = "bhoodie_tritone"
