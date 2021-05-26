@@ -309,7 +309,7 @@
 
 /datum/loadout_item/suit/hoodie/nrti
 	name = "Baggy Tri-Tone Hoodie"
-	path = /obj/item/clothing/suit/hoodie/tri-color
+	path = /obj/item/clothing/suit/hoodie/tricolor
 
 //JOB RELATED
 /datum/loadout_item/suit/job

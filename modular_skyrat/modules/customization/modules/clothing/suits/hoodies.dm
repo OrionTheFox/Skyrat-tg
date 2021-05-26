@@ -68,7 +68,9 @@
 	desc = "A warm, gray sweatshirt. It bears the letters NRT on the back, in reference to Sif's premiere technical institute."
 	icon_state = "nrti_hoodie"
 
-/obj/item/clothing/suit/hoodie //This is in the hoodie file because it's technically a hoodie, just a pullover - no zipper. It also matches the hoodie stats
+//----- Hoodies without alt-toggle should still go in the hoodies.dm -----//
+//These are NOT from Citadel like the above. Sprite credit goes to Dread, code credit to Orion_the_Fox
+/obj/item/clothing/suit/hoodie
 	/*
 	NOT YET IMPLIMENTED!!!!! JUST HERE AS THE FRAMEWORK FOR NON-TOGGLE HOODIES!!!!!
 	*/
@@ -77,10 +79,10 @@
 	icon = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
 	worn_icon = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
 	worn_icon_digi = 'modular_skyrat/master_files/icons/mob/clothing/suit.dmi'
-	icon_state = "bhoodie"	//ALL CREDIT TO DREAD FOR THIS LOVELY SPRITE!!!
-	min_cold_protection_temperature = T0C - 20
+	icon_state = "bhoodie"
+	min_cold_protection_temperature = T0C - 20	//Just gonna steal the same stats as the above hoodies
 
-/obj/item/clothing/suit/hoodie/tri-color
+/obj/item/clothing/suit/hoodie/tricolor
 	name = "baggy tri-color hoodie"
-	desc = "The latest in fashion from the hit 'Titlist' brand."
-	icon_state = "bhoodie_tritone"	//ALL CREDIT TO DREAD FOR THIS LOVELY SPRITE!!!
+	desc = "The latest in fashion from Dreadthreads"
+	icon_state = "bhoodie_tritone"

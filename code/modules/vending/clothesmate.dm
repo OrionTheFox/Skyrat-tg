@@ -99,7 +99,7 @@
 					/obj/item/clothing/suit/storage/toggle/hoodie/nt = 1,
 					/obj/item/clothing/suit/storage/toggle/hoodie/smw = 1,
 					/obj/item/clothing/suit/storage/toggle/hoodie/nrti = 1,
-					/obj/item/clothing/suit/hoodie/tri-color = 1,
+					/obj/item/clothing/suit/hoodie/tricolor = 1,
 					//SKYRAT EDIT: ADDITION: END - HOODIES
 					//SKYRAT EDIT: ADDITION: START - Coats/Hawaiian
 					/obj/item/clothing/suit/urban/polychromic = 3,
