@@ -17,7 +17,7 @@
 
 /obj/structure/closet/crate/big/reinforced
 	name = "reinforced large crate"
-	desc = "An even sturdier metal crate. It's a shame that the metal wasn't used to give it the lock it was missing!"
+	desc = "An even sturdier metal crate. It'd be the perfect way to secure your valuables, if you could lock it..."
 	icon_state = "largermetal"
 	material_drop = /obj/item/stack/sheet/plasteel
 	material_drop_amount = 4
