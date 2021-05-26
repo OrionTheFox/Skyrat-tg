@@ -2,9 +2,8 @@
 Allows you to wrap crates with plastic straps that need to be cut before it can open
 */
 
-//Adds the can_strap_shut variable
 /obj/structure/closet/crate
-	var/can_strap_shut = TRUE
+	var/can_strap_shut = TRUE	//Lets me exclude the ones it looks ugly as sin on
 	var/is_strapped = FALSE
 /obj/structure/closet/crate/trashcart
 	can_strap_shut = FALSE
@@ -15,7 +14,7 @@ Allows you to wrap crates with plastic straps that need to be cut before it can 
 /obj/structure/closet/crate/miningcar
 	can_strap_shut = FALSE
 
-/obj/structure/closet/crate/attackby(obj/item/used_item, mob/user, params)
+/obj/structure/closet/crate/attackby(obj/item/used_item, mob/user, params) //WIP
 	. = ..()
 	if(!opened)//Just to make sure we dont try to strap an open crate. Juuuuuust in case.
 		if(istype(used_item, /obj/item/stack/sheet/plastic))
@@ -25,11 +24,14 @@ Allows you to wrap crates with plastic straps that need to be cut before it can 
 			if(!do_after(user, 20, target = user))
 				to_chat(user, "<span class='warning'>You need to stand still to strap the [src] shut!</span>")
 				return
-//			if(use(4))
+//			if(use(4))	should add a check to make sure we use 4 from the stack? that or add a craftable plastic strap item - TODO
 			is_strapped = TRUE
+			add_fingerprint(user)
+			user.visible_message("<span class='notice'>[user] wraps [target].</span>")
+			user.log_message("has used [name] on [key_name(target)]", LOG_ATTACK, color="blue")
 	return
 
-//Re-define the can_open proc to block opening if is_strapped = TRUE, as well as posting to chat why
+//Re-define the can_open proc to block opening if is_strapped = TRUE, as well as posting to chat why - WIP
 /obj/structure/closet/crate/can_open(mob/living/user, force = FALSE)
 	if(force)
 		return TRUE
@@ -44,6 +46,66 @@ Allows you to wrap crates with plastic straps that need to be cut before it can 
 				to_chat(user, "<span class='danger'>There's something large on top of [src], preventing it from opening.</span>" )
 			return FALSE
 	return TRUE
+
+//Re-defines the tool_interact to make sure wirecutters are a valid tool, which remove is_strapped - WIP
+/obj/structure/closet/crate/tool_interact(obj/item/used_tool, mob/living/user)
+	. = TRUE
+	if(opened)
+		if(istype(used_tool, cutting_tool))
+			if(used_tool.tool_behaviour == TOOL_WELDER)
+				if(!used_tool.tool_start_check(user, amount=0))
+					return
+
+				to_chat(user, "<span class='notice'>You begin cutting \the [src] apart...</span>")
+				if(used_tool.use_tool(src, user, 40, volume=50))
+					if(!opened)
+						return
+					user.visible_message("<span class='notice'>[user] slices apart \the [src].</span>",
+									"<span class='notice'>You cut \the [src] apart with \the [used_tool].</span>",
+									"<span class='hear'>You hear welding.</span>")
+					deconstruct(TRUE)
+				return
+			else // for example cardboard box is cut with wirecutters
+				user.visible_message("<span class='notice'>[user] cut apart \the [src].</span>", \
+									"<span class='notice'>You cut \the [src] apart with \the [used_tool].</span>")
+				deconstruct(TRUE)
+				return
+		if(user.transferItemToLoc(used_tool, drop_location())) // so we put in unlit welder too
+			return
+	else
+		if(W.tool_behaviour == TOOL_WELDER && can_weld_shut)
+			if(!W.tool_start_check(user, amount=0))
+				return
+		if(W.tool_behaviour == TOOL_WIRECUTTER && is_strapped)
+			return
+
+		to_chat(user, "<span class='notice'>You begin [welded ? "unwelding":"welding"] \the [src]...</span>")
+		if(W.use_tool(src, user, 40, volume=50))
+			if(opened)
+				return
+			welded = !welded
+			after_weld(welded)
+			user.visible_message("<span class='notice'>[user] [welded ? "welds shut" : "unwelded"] \the [src].</span>",
+							"<span class='notice'>You [welded ? "weld" : "unwelded"] \the [src] with \the [W].</span>",
+							"<span class='hear'>You hear welding.</span>")
+			log_game("[key_name(user)] [welded ? "welded":"unwelded"] closet [src] with [W] at [AREACOORD(src)]")
+			update_appearance()
+	else if(W.tool_behaviour == TOOL_WRENCH && anchorable)
+		if(isinspace() && !anchored)
+			return
+		set_anchored(!anchored)
+		W.play_tool_sound(src, 75)
+		user.visible_message("<span class='notice'>[user] [anchored ? "anchored" : "unanchored"] \the [src] [anchored ? "to" : "from"] the ground.</span>", \
+						"<span class='notice'>You [anchored ? "anchored" : "unanchored"] \the [src] [anchored ? "to" : "from"] the ground.</span>", \
+						"<span class='hear'>You hear a ratchet.</span>")
+	else if(!user.combat_mode)
+		var/item_is_id = W.GetID()
+		if(!item_is_id)
+			return FALSE
+		if(item_is_id || !toggle(user))
+			togglelock(user)
+	else
+		return FALSE
 
 /*
 * WIP: Plastic Strapping will be a function of crates instead - - -
