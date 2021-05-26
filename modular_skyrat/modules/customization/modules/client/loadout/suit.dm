@@ -307,7 +307,7 @@
 	name = "NRTI Hoodie"
 	path = /obj/item/clothing/suit/storage/toggle/hoodie/nrti
 
-/datum/loadout_item/suit/hoodie/nrti
+/datum/loadout_item/suit/hoodie/bhoodie_tritone
 	name = "Baggy Tri-Tone Hoodie"
 	path = /obj/item/clothing/suit/hoodie/tricolor
 
