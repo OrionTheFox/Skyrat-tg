@@ -1,5 +1,6 @@
 /*
 Allows you to wrap crates with plastic straps that need to be cut before it can open
+Why? Well, aside from an additional reinforcement, a silly way to trap people in crates (you cant weld them shut), and fluff.. they'll be used for cargo-based space ruins ok
 */
 
 /obj/structure/closet/crate
@@ -13,7 +14,150 @@ Allows you to wrap crates with plastic straps that need to be cut before it can 
 	can_strap_shut = FALSE
 /obj/structure/closet/crate/miningcar
 	can_strap_shut = FALSE
+/obj/structure/closet/crate/large
+	can_strap_shut = FALSE //As much as I want it, I'd need to complicate shiz more
 
+/obj/structure/closet/crate/attackby(obj/item/used_item, mob/user, params)
+	. = ..()
+
+/obj/structure/closet/crate/examine(mob/user)
+	. = ..()
+	if(is_strapped)
+		. += "<span class='notice'>It's secured shut with plastic straps.</span>"
+
+//This should, if not locked for another reason, do a final check to see if the crate is strapped. Otherwise, it'll return the original value (TRUE)
+/obj/structure/closet/crate/can_open(mob/living/user, force = FALSE)
+	. = ..()
+	if(.)
+		if(is_strapped)
+			to_chat(user, "<span class='danger'>You can't open [src] while it's strapped shut!</span>")
+			return FALSE
+
+//This is here as a 'just in case I should add that'. Please clean it later. Please REMIND me to clean it later.
+/*Test this code in place later:
+/obj/structure/closet/crate/open(mob/living/user, force = FALSE)
+	. = ..()
+	is_strapped = FALSE
+In theory it should work to just pin this on at the end, but idk if it'll update_appearance() and shiz right*/
+/obj/structure/closet/crate/open(mob/living/user, force = FALSE)
+	if(!can_open(user, force))
+		return
+	if(opened)
+		return
+	welded = FALSE
+	locked = FALSE
+	is_strapped = FALSE	//The only fucking change I added.
+	playsound(loc, open_sound, open_sound_volume, TRUE, -3)
+	opened = TRUE
+	if(!dense_when_open)
+		density = FALSE
+	dump_contents()
+	update_appearance()
+	after_open(user, force)
+	return TRUE
+	//Also this is here because otherwise I'll overwrite it. Like I said - I need to fucking clean this later.
+	if(. && manifest)
+		to_chat(user, "<span class='notice'>The manifest is torn off [src].</span>")
+		playsound(src, 'sound/items/poster_ripped.ogg', 75, TRUE)
+		manifest.forceMove(get_turf(src))
+		manifest = null
+		update_appearance()
+
+//(Original proc comment:) returns TRUE if attackBy call shouldn't be continued (because tool was used/closet was of wrong type), FALSE if otherwise
+//This addition should do one final check - if it's strapped and attacked with the right tools, it'll remove the straps and return TRUE. Otherwise it'll still return FALSE.
+/obj/structure/closet/crate/tool_interact(obj/item/W, mob/living/user)
+	. = ..()
+	if(!.)	//If the original output made it all the way to the bottom and output FALSE
+		if(istype(W, cutting_tool) && is_strapped)	//Overall check, if it's not strapped they'll attack like normal
+			if(W.tool_behaviour == TOOL_WIRECUTTER)
+				to_chat(user, "<span class='notice'>You easily cut the straps off \the [src]!")
+				is_strapped = FALSE
+				//add plastic drop here
+				update_appearance()	//Gotta actually remove the strap sprite
+				log_game("[key_name(user)] cut the straps of crate [src] with [W] at [AREACOORD(src)]")	//Idk logging is important
+				return TRUE
+			else if(W.tool_behaviour == TOOL_KNIFE || W.tool_behaviour == TOOL_SAW)
+				to_chat(user, "<span class='notice'>You begin using your [W] to saw through \the [src]'s straps...")
+				if(!do_after(user, 20, target = user))
+					to_chat(user, "<span class='notice'>Your [W] slips and you lose your groove!")	//I won't the only one who finds it funny that they not only lose the groove they saw into the strap with the knife, but also their metaphorical groove... right?
+					return TRUE
+				to_chat(user, "<span class='notice'>You saw the straps off \the [src]!")
+				is_strapped = FALSE
+				//add plastic drop here
+				update_appearance()	//Gotta actually remove the strap sprite
+				log_game("[key_name(user)] cut the straps of crate [src] with [W] at [AREACOORD(src)]")	//Idk logging is important
+				return TRUE
+
+//Makes sure you can resist out of a strapped locker/crate (Don't want people getting stuck, duh)
+//-----Currently copy-paste and only adds the is_strapped to the 3rd if. Thats it.
+//-----Please fix that to be cleaner. Someone remind me to do this if I havent.
+/obj/structure/closet/crate/container_resist_act(mob/living/user)
+	if(opened)
+		return
+	if(ismovable(loc))
+		user.changeNext_move(CLICK_CD_BREAKOUT)
+		user.last_special = world.time + CLICK_CD_BREAKOUT
+		var/atom/movable/AM = loc
+		AM.relay_container_resist_act(user, src)
+		return
+	if(!welded && !locked && !is_strapped)	//Added && !is_strapped check
+		open()
+		return
+
+	//okay, so the closet is either welded or locked... resist!!!
+	user.changeNext_move(CLICK_CD_BREAKOUT)
+	user.last_special = world.time + CLICK_CD_BREAKOUT
+	user.visible_message("<span class='warning'>[src] begins to shake violently!</span>", \
+		"<span class='notice'>You lean on the back of [src] and start pushing the door open... (this will take about [DisplayTimeText(breakout_time)].)</span>", \
+		"<span class='hear'>You hear banging from [src].</span>")
+	if(do_after(user,(breakout_time), target = src))
+		if(!user || user.stat != CONSCIOUS || user.loc != src || opened || (!locked && !welded) )
+			return
+		//we check after a while whether there is a point of resisting anymore and whether the user is capable of resisting
+		user.visible_message("<span class='danger'>[user] successfully broke out of [src]!</span>",
+							"<span class='notice'>You successfully break out of [src]!</span>")
+		bust_open()
+	else
+		if(user.loc == src) //so we don't get the message if we resisted multiple times and succeeded.
+			to_chat(user, "<span class='warning'>You fail to break out of [src]!</span>")
+
+//This is literally just copied from the original closet/proc/bust_open(), but I've added the if(is_strapped) and its contents.
+//Maybe I can do this cleaner?
+/obj/structure/closet/crate/bust_open()
+	welded = FALSE //applies to all lockers
+	locked = FALSE //applies to critter crates and secure lockers only
+	broken = TRUE //applies to secure lockers only
+	if(is_strapped)	//This is in an if statement so we can get some plastic drops still
+		is_strapped = FALSE	//applies to all crates
+		//drop some plastic here
+	open()
+
+//THIS ALSO NEEDS CLEANING
+//And big big thing, need to find a way to do a different overlay for crate and crate/big
+/obj/structure/closet/crate/closet_update_overlays(list/new_overlays)
+	. = new_overlays
+	if(opened)
+		. += "[icon_door_override ? icon_door : icon_state]_open"
+		return
+
+	. += "[icon_door || icon_state]_door"
+	if(welded)
+		. += icon_welded
+
+	if(broken || !secure)
+		return
+	//Overlay is similar enough for both that we can use the same mask for both
+	SSvis_overlays.add_vis_overlay(src, icon, "locked", EMISSIVE_LAYER, EMISSIVE_PLANE, dir, alpha)
+	. += locked ? "locked" : "unlocked"
+
+	if(is_strapped)
+		//FUCK I NEED TO CHECK THE CRATE SIZE HERE
+		. += crate_strap	//crate
+		. += largecrate_strap //crate/big
+
+
+//Now that we've established what a strapped crate is and how it works, we'll make it possible to actually strap one
+/*
 /obj/structure/closet/crate/attackby(obj/item/used_item, mob/user, params) //WIP
 	. = ..()
 	if(!opened)//Just to make sure we dont try to strap an open crate. Juuuuuust in case.
@@ -24,88 +168,13 @@ Allows you to wrap crates with plastic straps that need to be cut before it can 
 			if(!do_after(user, 20, target = user))
 				to_chat(user, "<span class='warning'>You need to stand still to strap the [src] shut!</span>")
 				return
-//			if(use(4))	should add a check to make sure we use 4 from the stack? that or add a craftable plastic strap item - TODO
+			//if(use(4))	should add a check to make sure we use 4 from the stack? that or add a craftable plastic strap item - TODO
 			is_strapped = TRUE
 			add_fingerprint(user)
-			user.visible_message("<span class='notice'>[user] wraps [target].</span>")
-			user.log_message("has used [name] on [key_name(target)]", LOG_ATTACK, color="blue")
+			user.visible_message("<span class='notice'>[user] wraps [src].</span>")
+			user.log_message("has used [name] on [key_name(src)]", LOG_ATTACK, color="blue")
 	return
-
-//Re-define the can_open proc to block opening if is_strapped = TRUE, as well as posting to chat why - WIP
-/obj/structure/closet/crate/can_open(mob/living/user, force = FALSE)
-	if(force)
-		return TRUE
-	if(welded || locked)
-		return FALSE
-	if(is_strapped)
-		to_chat(user,"<span class='notice'>[src] is strapped shut, preventing it from opening.</span>")
-	var/turf/T = get_turf(src)
-	for(var/mob/living/L in T)
-		if(L.anchored || horizontal && L.mob_size > MOB_SIZE_TINY && L.density)
-			if(user)
-				to_chat(user, "<span class='danger'>There's something large on top of [src], preventing it from opening.</span>" )
-			return FALSE
-	return TRUE
-
-//Re-defines the tool_interact to make sure wirecutters are a valid tool, which remove is_strapped - WIP
-/obj/structure/closet/crate/tool_interact(obj/item/used_tool, mob/living/user)
-	. = TRUE
-	if(opened)
-		if(istype(used_tool, cutting_tool))
-			if(used_tool.tool_behaviour == TOOL_WELDER)
-				if(!used_tool.tool_start_check(user, amount=0))
-					return
-
-				to_chat(user, "<span class='notice'>You begin cutting \the [src] apart...</span>")
-				if(used_tool.use_tool(src, user, 40, volume=50))
-					if(!opened)
-						return
-					user.visible_message("<span class='notice'>[user] slices apart \the [src].</span>",
-									"<span class='notice'>You cut \the [src] apart with \the [used_tool].</span>",
-									"<span class='hear'>You hear welding.</span>")
-					deconstruct(TRUE)
-				return
-			else // for example cardboard box is cut with wirecutters
-				user.visible_message("<span class='notice'>[user] cut apart \the [src].</span>", \
-									"<span class='notice'>You cut \the [src] apart with \the [used_tool].</span>")
-				deconstruct(TRUE)
-				return
-		if(user.transferItemToLoc(used_tool, drop_location())) // so we put in unlit welder too
-			return
-	else
-		if(W.tool_behaviour == TOOL_WELDER && can_weld_shut)
-			if(!W.tool_start_check(user, amount=0))
-				return
-		if(W.tool_behaviour == TOOL_WIRECUTTER && is_strapped)
-			return
-
-		to_chat(user, "<span class='notice'>You begin [welded ? "unwelding":"welding"] \the [src]...</span>")
-		if(W.use_tool(src, user, 40, volume=50))
-			if(opened)
-				return
-			welded = !welded
-			after_weld(welded)
-			user.visible_message("<span class='notice'>[user] [welded ? "welds shut" : "unwelded"] \the [src].</span>",
-							"<span class='notice'>You [welded ? "weld" : "unwelded"] \the [src] with \the [W].</span>",
-							"<span class='hear'>You hear welding.</span>")
-			log_game("[key_name(user)] [welded ? "welded":"unwelded"] closet [src] with [W] at [AREACOORD(src)]")
-			update_appearance()
-	else if(W.tool_behaviour == TOOL_WRENCH && anchorable)
-		if(isinspace() && !anchored)
-			return
-		set_anchored(!anchored)
-		W.play_tool_sound(src, 75)
-		user.visible_message("<span class='notice'>[user] [anchored ? "anchored" : "unanchored"] \the [src] [anchored ? "to" : "from"] the ground.</span>", \
-						"<span class='notice'>You [anchored ? "anchored" : "unanchored"] \the [src] [anchored ? "to" : "from"] the ground.</span>", \
-						"<span class='hear'>You hear a ratchet.</span>")
-	else if(!user.combat_mode)
-		var/item_is_id = W.GetID()
-		if(!item_is_id)
-			return FALSE
-		if(item_is_id || !toggle(user))
-			togglelock(user)
-	else
-		return FALSE
+*/
 
 /*
 * WIP: Plastic Strapping will be a function of crates instead - - -
